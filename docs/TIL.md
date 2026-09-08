@@ -245,6 +245,34 @@ ERROR ... [dispatcherServlet] : ... JpaSystemException: could not execute statem
 
 ===
 
+---- Lv6 ----
+
+[1] DB 확인
+
+```sql
+mysql> SELECT id, player_name, current_hp, current_floor, phase, status FROM games;
+
+___Result___
+5	밤의 후계자	99	1	REWARD	PLAYING
+6	밤의 후계자	99	1	REWARD	PLAYING
+___
+```
+- 로그와 다르게 저장은 되는 중.
+
+[2] '보상 카드'를 누르는 흐름 추적
+- 클라가 덱 전체(시작 9장 + 고른 1장)을 PUT/games/{gamdId}/progress 로 보냄
+- 스프링은 games/{gamdId}/progress 경로에서 어떤 것도 찾지 못해서 404 반환.
+- 이전 Lv3의 '405'의 경우 매핑은 있되, GET이 없어서 405 였었음.
+- 반면 현재는 경로자체가 부재하여 404를 반환하는 중.
+
+[3] Controller에 PutMapping 추가
+
+[4] http://localhost:8080/를 통해 게임 실행 확인
+-> 정상 진행 확인.
+- 하지만 DB에 저장이 되었음에도 UI 상 Load 목록 리스트에 표시되지 않는 현상 확인.
+
+===
+
 ## M0
 
 ## M1
