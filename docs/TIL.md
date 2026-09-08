@@ -214,6 +214,36 @@ ERROR ... [dispatcherServlet] : ... JpaSystemException: could not execute statem
 
 ===
 
+---- Lv5 ----
+
+[1] CardResponse(응답 DTO)와 RunCardRequest(요청 DTO) 확인
+- 아직 미구현 된 stub 임.
+
+[2] 기획에 따른 API 명세 확인
+
+>RunCardRequest
+- cardType
+  - 필수
+  - null, 빈 문자열, 공백만 있는 문자열을 허용하지 않음
+  - 서버에서 enum으로 제한하지 않고 문자열로 저장
+- acquiredFloor
+  - 필수
+  - 최소 0
+  - 최대 10
+
+[3] RunCardRequest, CardResponse 구현
+- RunCardRequest는 클라측이 보낸 카드 정보를 수신.
+- CardResponse는 저장된 카드 정보를 클라에 반환.
+
+- 카드 id는 데이터베이스 저장 과정에서 생성. 요청x 응답에만 o
+
+[4] http://localhost:8080/를 통해 게임 실행 확인
+-> 게임 시작 확인, 시작 보상 화면까지 도달. 
+-> 하지만 '보상 카드'를 누르면,
+   (Log: "저장된 게임을 찾을 수 없습니다. 저장 목록으로 돌아갑니다.") 출력 및 타이틀로 돌아감.
+   게임 진행 불가.
+
+===
 
 ## M0
 
