@@ -128,6 +128,93 @@ GET http://localhost:8080/games
 
 ===
 
+---- lv4 ----
+
+[1] 에러 재현
+- 서버 실행 후 http://localhost:8080/ 접속 -> '게임 시작' -> 이름 입력 -> '새 게임' 클릭
+
+요청
+```http
+POST http://localhost:8080/games
+Content-Type: application/json
+```
+```json
+{
+  "playerName": "밤의 후계자",
+  "deck": [
+    {
+      "cardType": "STRIKE",
+      "acquiredFloor": 0
+    },
+    ...
+    {
+      "cardType": "MEND",
+      "acquiredFloor": 0
+    }
+  ]
+}
+```
+
+응답 `500 Internal Server Error`
+```json
+{
+    "timestamp": "2026-09-08T10:29:55.838Z",
+    "status": 500,
+    "error": "Internal Server Error",
+    "path": "/games"
+}
+```
+
+[2] 원인: 서버 내부에서 예외가 처리되지 않음. 서버 로그 확인
+
+서버 로그
+```
+at com.gamebasic.game.service.GameService.createGame(GameService.java:30)
+at com.gamebasic.game.service.GameService$$SpringCGLIB$$0.createGame(<generated>)
+at com.gamebasic.game.controller.GameController.createGame(GameController.java:31)
+...
+~
+WARN  ... org.hibernate.orm.jdbc.error : HHH000247: ErrorCode: 0, SQLState: S1009
+WARN  ... org.hibernate.orm.jdbc.error : Connection is read-only. Queries leading to data modification are not allowed
+ERROR ... [dispatcherServlet] : ... JpaSystemException: could not execute statement [Connection is read-only...] 
+```
+
+- 데이터 베이스 연결은 읽기 전용임에도, INSERT/UPDATE/DELETE 같은 쓰기 쿼리를 실행하려고 함.
+- gamebasic.game.service.GameService.createGame 확인 필요.
+
+[3] GameService.createGame 확인
+
+@Transactional(readOnly = true)
+    public GameDetailResponse createGame(CreateRequest request) {
+        Game game = gameRepository.save(new Game(request.getPlayerName()));
+        saveDeck(game, request.getDeck());
+        List<RunCard> cards = runCardRepository.findAllByGameOrderByIdAsc(game);
+        List<CardResponse> deck = new ArrayList<>();
+        for (RunCard card : cards) {
+            deck.add(new CardResponse(card.getId(), card.getCardType(), card.getAcquiredFloor()));
+        }
+        return new GameDetailResponse(
+            game.getId(),
+            game.getPlayerName(),
+            game.getCurrentHp(),
+            game.getCurrentFloor(),
+            game.getPhase(),
+            game.getStatus(),
+            deck
+        );
+    }
+
+- 단순 조회가 아닌, 게임 초기값 세팅과 시작 덱 생성 후 서버 저장 등의 쓰기가 필요한 메서드임에도 readonly가 설정되어 있음.
+- (readOnly = true)를 (readOnly = false)로 변경
+
+[4] http://localhost:8080/를 통해 게임 실행 확인
+-> 에러 수정 완료, 하지만 추가 에러 메시지 확인.
+-> '게임 시작'을 누르면,
+   (Log: "서버 응답이 API 명세와 다릅니다 (deck[0].id)") 출력 및 게임 진행 불가
+
+===
+
+
 ## M0
 
 ## M1
