@@ -273,6 +273,232 @@ ___
 
 ===
 
+---- Lv7 ----
+
+[1] 현재 상태 확인
+- F12 -> Network -> games -> Headers
+- Headers에서 요청 URL, HTTP 메서드, 상태 코드 확인
+- Response에서 응답 본문 `[]` 확인
+
+요청
+```http
+GET http://localhost:8080/games
+```
+
+응답 `200 OK`
+```json
+[]
+```
+- 클라는 페이지 로드 시 목록 API를 호출 하지만 빈 배열만 받는 중.
+- DB에도 게임이 저장되어 있음.
+- 클라 측 UI 화면 표시도 이상 없음.
+
+- 임시 서버 측 조회 API가 빈 배열 반환 중.
+
+[2] API 계약 확인
+
+>GET /games
+- 모든 게임 조회
+- 게임 id 기준 내림차순
+- 덱은 포함하지 않음
+- 결과가 없으면 []
+
+>GET /games/{gameId}
+- 특정 게임 상세 조회
+- 전체 덱 포함
+- 덱은 RunCard.id 기준 오름차순
+- 게임이 없으면 404
+
+[3] GameSummaryResponse 작성
+- 게임 목록 API의 응답 계약을 표현하는 DTO.
+- Game 엔티티에서 목록에 필요한 필드만 선택하여 반환.
+- 상세 응답과 달리 덱은 포함하지 않음.
+
+[4] GameRepository 작성
+- 조건없는 전체 조회.
+- List<Game> 반환.
+- Game.id 기준 내림차순.
+
+>List<Game> findAllByOrderByIdDesc();
+- findAll -> 전체 조회
+- By      -> 조회 조건 표현의 시작
+- OrderBy -> 정렬한다
+- Id      -> Game의 id필드를 기준으로
+- Desc    -> 내림차순으로
+
+- Spring Data JPA가 이름을 분석하여 실행 코드 자동 생성.
+- 선언만 하더라도 개념적으로 아래와 같은 쿼리가 만들어짐.
+```
+SELECT *
+FROM games
+ORDER BY id DESC;
+```
+
+[5] implement GameService.getGames()
+- 모든 게임 조회.
+- 덱이 없는 게임 요약 목록
+
+- 반환값: List<GameSummaryResponse>
+- 즉 Game엔티티를 DTO로 변환해야함.
+
+[6] implement GameService.getGame(Long)
+- 특정 게임 회차 하나 조회.
+- 덱을 포함한 게임 상세
+
+[7] implement GameController.getGames()
+
+[8] add GameController.getGame(@PathVariable Long gameId)
+
+[9] 테스트
+1) GET /games
+  - 200 OK 확인.
+  - 게임 ID가 7, 6, 5 순서이므로 내림차순 정렬 확인.
+  - 목록 응답에 deck이 포함되지 않는 것을 확인.
+요청
+```http
+GET http://localhost:8080/games
+```
+
+응답 `200 OK`
+```json
+[
+    {
+        "id": 7,
+        "playerName": "밤의 후계자",
+        "currentFloor": 1,
+        "currentHp": 99,
+        "phase": "BATTLE",
+        "status": "PLAYING"
+    },
+    {
+        "id": 6,
+        "playerName": "밤의 후계자",
+        "currentFloor": 1,
+        "currentHp": 99,
+        "phase": "REWARD",
+        "status": "PLAYING"
+    },
+    {
+        "id": 5,
+        "playerName": "밤의 후계자",
+        "currentFloor": 1,
+        "currentHp": 99,
+        "phase": "REWARD",
+        "status": "PLAYING"
+    }
+]
+```
+
+2) GET /games/5
+  - 200 OK 확인.
+  - 게임 상세 정보와 전체 덱 반환 확인.
+  - 카드 ID가 68부터 76까지 오름차순인 것을 확인.
+요청
+```http
+GET http://localhost:8080/games/5
+```
+
+응답 `200 OK`
+```json
+{
+    "id": 5,
+    "playerName": "밤의 후계자",
+    "currentHp": 99,
+    "currentFloor": 1,
+    "phase": "REWARD",
+    "status": "PLAYING",
+    "deck": [
+        {
+            "id": 68,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 69,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 70,
+            "cardType": "HEART_PIERCE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 71,
+            "cardType": "GUARD",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 72,
+            "cardType": "MIST_KNOT",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 73,
+            "cardType": "QUICK_SLASH",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 74,
+            "cardType": "WARDING_SLASH",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 75,
+            "cardType": "BLOOD_RUNE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 76,
+            "cardType": "MEND",
+            "acquiredFloor": 0
+        }
+    ]
+}
+```
+
+3) GET /games/999
+  - 존재하지 않는 게임에 대해 404 확인.
+  - 현재는 Spring 기본 오류 응답이며, Lv10에서 명세 형식으로 변경할 예정.
+요청
+```http
+GET http://localhost:8080/games/999
+```
+
+응답 `404 Not Found`
+```json
+{
+    "timestamp": "2026-09-08T14:17:52.947Z",
+    "status": 404,
+    "error": "Not Found",
+    "path": "/games/999"
+}
+```
+
+4) GET /games/abc
+  - Long으로 변환할 수 없는 gameId에 대해 400 확인.
+  - 요청이 Controller 메서드에 전달되기 전 PathVariable 변환 단계에서 실패.
+요청
+```http
+GET http://localhost:8080/games/abc
+```
+
+응답 `400 Bad Request`
+```json
+{
+    "status": 400,
+    "message": "요청 본문이나 파라미터 형식이 올바르지 않습니다.",
+    "path": "/games/abc",
+    "error": "Bad Request"
+}
+```
+
+[10] http://localhost:8080/를 통해 게임 실행 확인
+- 타이틀에 "저장된 여정" 버튼 추가 됨.
+- "저장된 여정"에 게임 목록 표시 확인 완료
+- 선택 시 게임 로드 완료.
+- 저장된 HP, 층 수, 덱 목록 DB와 일치.
+
 ## M0
 
 ## M1
