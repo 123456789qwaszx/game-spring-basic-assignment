@@ -499,6 +499,121 @@ GET http://localhost:8080/games/abc
 - 선택 시 게임 로드 완료.
 - 저장된 HP, 층 수, 덱 목록 DB와 일치.
 
+===
+
+---- Lv8 ----
+
+[1] 게임 회차에 저장된 이름 변경 및 삭제 기능 추가를 위한 설계 방향성 확인
+- 클라 UI를 먼저 변경 후 서버 DB sync가 아님.
+- 클라가 변경 요청 -> 서버 DB 실제 변경 -> 성공 후 목록 재조회 -> 데이터를 토대로 클라 UI 갱신.
+
+1) 이름 교체 시
+-> 서버 DB 변경
+-> 204 No Content
+-> 게임 목록 재조회
+-> UI 갱신
+
+2) 삭제 시
+-> 서버에서 카드와 게임 삭제
+-> 204 No Content
+-> 게임 목록 재조회
+-> 삭제된 게임이 UI에서 사라짐
+
+[2] API 명세 확인
+
+이름 변경:
+PATCH /games/{gameId}
+
+요청
+```json
+{
+  "playerName": "붉은 순례자"
+}
+```
+- 선택한 게임의 playerName만 DB에서 변경.
+- 다른 진행 정보는 변경하지 않는다.
+- 이름은 필수 / 공백 비허용 / 길이는 2자 이상 12자 이하.
+- 변경 성공 시 '204 No Content'
+
+게임 삭제:
+DELETE /games/{gameId}
+
+- 선택한 게임과 그 게임에 속한 모든 카드를 DB에서 삭제.
+- 삭제 성공 시 '204 No Content'
+
+[3] RenameRequest 작성
+- CreateRequest의 playerName와 같은 명세.
+
+[4] implement GameService.renameGame()
+
+> 더티 체킹:
+- renameGame()은 @Transactional이 적용된 상태.
+- save가 없더라도, findGame은 gameRepository.findById()로 조회하기에,
+- 반환된 Game은 
+- 현재 트랜잭션의 영속성 컨텍스트에서 관리 및조회 시점의 값을 스냅샷으로 보관 중.
+-
+- 그 상태에서 game.rename(...)으로 필드를 바꾸면, 스냅샷과 현재 값이 달라짐.
+- 트랙잭션이 커밋될 때, 하이버네이트가 flush를 수행, 관리 중인 엔티티들의 스냅샷과 현재값을 비교.
+- 달라진 필드에 대해 UPDATE를 만들어 실행함.
+
+[5] implement GameService.deleteGame()
+- RunCard는 '@JoinColumn(name = "game_id", nullable = false)'로 games를 참조하는 FK를 가짐.
+- 따라서 지우는 순서 '자식 - 부모'로 해야함.
+- 동시에 '카드'가 없는 '게임'이라는 것이 없도록 '@Transactional' 애노테이션을 사용해 원자적으로 처리.
+
+[6] add GameController.renameGame()
+[7] add GameController.deleteGame()
+
+[8] localhost:8080/ 브라우저에서 확인
+- "저장된 여정"목록에서 이름 변경 진행.
+- 삭제 후 목록에서 사라지는 것 확인.
+
+- F12 -> Network -> games -> Headers
+- Headers에서 요청 URL, HTTP 메서드, 상태 코드 확인
+- 204 이후 즉각적으로 200 호출하여 갱신 됨을 확인.
+Request URL
+http://localhost:8080/games/6
+Request Method
+DELETE
+Status Code
+204 No Content
+Remote Address
+[::1]:8080
+Referrer Policy
+strict-origin-when-cross-origin
+
+Request URL
+http://localhost:8080/games
+Request Method
+GET
+Status Code
+200 OK
+Remote Address
+[::1]:8080
+Referrer Policy
+strict-origin-when-cross-origin
+
+- DB에서도 삭제 됨.
+```sql
+mysql> SELECT * FROM games WHERE id = 6;
+mysql> SELECT COUNT(*) FROM run_cards WHERE game_id = 6;
+```
+- 둘 다 결과 없음.
+- GET /games/6이 404를 주는 것만으로도, 결과적으로 카드 삭제가 수행됨을 확인.
+- (GET /games/6의 404 응답으로 Game 삭제 이후,
+-  run_cards에서 game_id=6인 행의 개수가 0인 것으로 RunCard를 삭제 시킨 것임)
+
+```sql
+mysql> SELECT id, player_name, current_hp, current_floor, phase FROM games WHERE id = 9;
+
+___Result___
+9	변경 된 이름rf123	99	1	BATTLE
+___
+```
+- DB상으로도 이름 변경 확인: '밤의 후계자(전)' -> '변경 된 이름rf123(후)'
+
+===
+
 ## M0
 
 ## M1
