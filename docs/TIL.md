@@ -75,6 +75,59 @@ mysql> SELECT * FROM run_cards;
 
 ===
 
+---- Lv3 ----
+
+[1] 게임 목록 조회 - 수정 전
+
+요청
+```http
+GET http://localhost:8080/games
+```
+
+응답 `405 Method Not Allowed`
+```json
+{
+    "timestamp": "2026-09-08T08:45:44.812Z",
+    "status": 405,
+    "error": "Method Not Allowed",
+    "path": "/games"
+}
+```
+
+> 404 = 경로에 매핑된 게 없음 /  
+405 = 경로는 존재하지만, 요청한 HTTP 메서드에 대한 매핑이 없음.
+
+[2] API 명세와 Controller 매핑 비교
+
+- 명세: GET /games
+- Controller 확인 결과
+@GetMapping("/game")
+    public ResponseEntity<List<Object>> getGames() {
+        // List<Object>는 임시 구현이며, Lv 7에서 제대로 고칩니다.
+        // List.of()는 빈 목록을 돌려주는 임시 구현이며, Lv 7에서 제대로 고칩니다.
+        return ResponseEntity.ok(List.of());
+    }
+- "/game" 오탈자 확인 및 수정 -> "/games"
+
+[3] 게임 목록 조회 — 수정 후
+
+요청
+```http
+GET http://localhost:8080/games
+```
+
+응답 `200 OK`
+```json
+[]
+```
+
+[4] http://localhost:8080/를 통해 게임 실행 확인
+-> 에러 수정 완료, 하지만 추가 에러 메시지 확인.
+-> '게임 시작'을 누르면,
+   (Log: "요청을 처리하지 못했습니다.") 출력 및 게임 진행 불가
+
+===
+
 ## M0
 
 ## M1
