@@ -614,6 +614,130 @@ ___
 
 ===
 
+---- lv9 ----
+
+[1] 문제 확인
+- 게임 클라 자체는 종료된 게임에 진행 저장 요청을 보내지 않음.
+- 그럼에도 API를 직접 호출할 경우, 종료된 게임에 대한 PUT요청을 넣을 수 있음.
+- 현재 서버는 그런 잘못된 요청도 다 받아줌.
+
+- 게임의 상태 전이 규칙 자체를 서버가 소유하고 보장해야함.
+
+[2] 기본 개념
+- 클라를 신뢰 하지 않는다.
+- 이번 경우 서버가 비즈니스 규칙을 검증한다.
+- 현재 상태에 따라 가능한 요청 자체를 제한하고, 잘못된 변경은 데이터를 건드리기 전 차단한다.
+
+[3] API 명세 확인
+- CLEARED 또는 FAILED 상태의 게임은 변경할 수 없다.
+- 종료된 게임에 진행 저장 요청(허용되지 않는 상태 변경 요청)을하면 409 Conflict를 반환한다.
+- 요청을 거부한 경우에, 게임과 덱 데이터는 변경되지 않아야 한다.
+
+[4] GameService.updateProgress에 검사 추가
+- 위치: findGame 직후, game.updateProgress 실행 전.
+- 실제 데이터 변경을 시작하기 전에 차단 및 의도 명시.
+- 롤백은 사후수습. 이런 예외처리도 설계된 결과값.
+
+[5] 테스트
+
+1) FAILED 게임 추가
+
+요청 
+PUT localhost:8080/games/9/progress
+```json
+{
+  "currentHp": 0,
+  "currentFloor": 5,
+  "phase": "FINISHED",
+  "status": "FAILED",
+  "deck": [
+    { "cardType": "STRIKE", "acquiredFloor": 0 },
+    { "cardType": "GUARD", "acquiredFloor": 0 }
+  ]
+}
+```
+
+응답 `200 OK`
+```json
+{
+    "id": 9,
+    "playerName": "변경 된 이름rf123",
+    "currentHp": 0,
+    "currentFloor": 5,
+    "phase": "FINISHED",
+    "status": "FAILED",
+    "deck": [
+        {
+            "id": 143,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 144,
+            "cardType": "GUARD",
+            "acquiredFloor": 0
+        }
+    ]
+}
+```
+
+2) 현재 상태
+```sql
+mysql> SELECT id, player_name, current_hp, current_floor, phase, status FROM games WHERE id = 9;
+___Result___
+9	변경 된 이름rf123	0	5	FINISHED	FAILED
+___	
+```
+
+```sql 
+mysql> SELECT id, card_type, acquired_floor FROM run_cards WHERE game_id = 9 ORDER BY id;
+
+___Result___
+143	STRIKE	0
+144	GUARD	0
+___
+```	
+
+3) 재요청
+
+요청 
+PUT localhost:8080/games/9/progress
+```json
+{
+  "currentHp": 99,
+  "currentFloor": 1,
+  "phase": "REWARD",
+  "status": "PLAYING",
+  "deck": [
+    { "cardType": "MEND", "acquiredFloor": 3 }
+  ]
+}
+```
+
+응답 `409 Conflict`
+```json
+{
+    "timestamp": "2026-09-08T16:52:57.079Z",
+    "status": 409,
+    "error": "Conflict",
+    "path": "/games/9/progress"
+}
+```
+
+4) DB 데이터 불변 확인
+
+```sql 
+mysql> SELECT id, player_name, current_hp, current_floor, phase, status FROM games WHERE id = 9;
+mysql> SELECT id, card_type, acquired_floor FROM run_cards WHERE game_id = 9 ORDER BY id;
+```
+- 재요청 했음에도 데이터 변경 없음.
+- game의 HP, 층, phase, status가 기존 값과 동일했다.
+- RunCard의 id가 143, 144로 유지됐다.
+- 의도한대로, 허용되지 않은 상태 변경 요청 차단을 확인.
+- 브라우저에서도 의도한 대로 게임 동작 중.
+
+===
+
 ## M0
 
 ## M1
