@@ -738,6 +738,186 @@ mysql> SELECT id, card_type, acquired_floor FROM run_cards WHERE game_id = 9 ORD
 
 ===
 
+---- lv10 ----
+
+[1] 현재 상황
+- 요청값 검증 실패인 400은 GlobalExceptionHandler가 처리 중.
+- 게임을 찾지 못한 404와 종료된 게임의 변경을 막는 409는 Service에서 ResponseStatusException으로 처리 중.
+- 400은 직접 정의한 ErrorResponse를 반환하지만, 404와 409는 Spring 기본 오류 응답을 반환.
+- 404와 409에는 구체적인 실패 원인을 설명하는 message가 없다.
+
+[2] 문제점
+- 오류 처리가 Service와 전역 예외 처리기에 흩어져 있다.
+- 400은 직접 정의한 응답을 사용하지만, 404와 409는 Spring 기본 오류 응답을 사용하여 형식이 일관되지 않다.
+- 상태 코드만으로는 게임이 없는지, 종료된 게임인지 등 구체적인 실패 원인을 알기 어렵다.
+
+[3] 개선 방안 및 목적
+- 예외 처리와 응답 생성을 한곳에 모아, 모든 API가 일관된 형식과 명확한 message를 반환하도록 한다.
+- 서버 내부에서 발생한 예외를 정해진 형식의 일관된 HTTP 응답으로 변환한다.
+- 서로 다른 오류 원인을 하나의 일반적인 오류로 뭉개지 않는다.
+- 클라이언트와 개발자가 실패 원인을 식별할 수 있는 오류 계약을 제공한다.
+
+[4] GlobalExceptionHandler에 핸들러 추가
+- GameNotFoundException(-> 404)과 GameFinishedException(-> 409)
+
+- 반환방식 예시:
+ return respond(HttpStatus.BAD_REQUEST, message, request);
+
+- 공통 응답 생성 메서드:
+private ResponseEntity<ErrorResponse> respond(
+    HttpStatus status,
+    String message,
+    HttpServletRequest request
+) {
+    return ResponseEntity
+        .status(status)
+        .body(new ErrorResponse(
+            status,
+            message,
+            request.getRequestURI()
+        ));
+}
+
+- 즉 그냥 상태 코드랑 메시지만 결정 후 respond에 넘기면 끝.
+
+- 각 예외가 가진 message를 e.getMessage()로.
+- 기존 respond()를 재사용.
+
+[5] GameService 예외 처리 경로 연결
+
+>변경된 흐름(후):
+1) GameService: 문제 발견 하고 예외 발생 처리.
+-> GameFinishedException(gameId) 호출.
+
+2)  public GameFinishedException(Long gameId) {
+        super(
+            "이미 끝난 여정은 진행을 저장할 수 없습니다. id="
+            + gameId
+        );
+}
+-> super()로 메시지를 부모에 전달.
+-> 부모인 RuntimeException은 이 문자열을 예외 메시지로 보관.
+(나중에 e.getMessage()로 꺼낼 수 있음)
+
+3) Spring MVC가 발생한 예외를 확인하고 핸들러 매칭
+- 예외가 Service → Controller → DispatcherServlet으로 전파됨
+-> DispatcherServlet이 @RestControllerAdvice에 등록된 핸들러 중 예외 타입이 일치하는 것을 찾아 호출.
+-> 핸들러 파라미터 타입을 보고 예외(e)와 HTTP 경로(HttpServletRequest)를 정리,
+-> GlobalExceptionHandler.handleGameFinished(e, HttpServletRequest) 호출
+
+4) handleGameFinished(e, HttpServletRequest)가 HTTP 응답(ErrorResponse)을 반환. 
+-> respond()가 ErrorResponse와 요청 경로를 조립.
+
+>기존 흐름(전):
+1) GameService에서 HTTP 예외 발생
+- throw new ResponseStatusException(HttpStatus.CONFLICT);
+- 이미 서비스가 HTTP 상태 코드를 직접 지정했음. 메시지도 부재.
+
+2) 예외 전파
+- Service → Controller → DispatcherServlet.
+- 하지만 @ExceptionHandler에는 매칭되지 않음.
+-> Spring Boot의 기본 오류 처리 경로에서 처리됨.
+
+> 전용 예외를 만든 이유:
+1) 디버깅 편의
+- 예외 타입만 보고도 어떤 문제인지 확인 가능.
+- 로그와 Trace에서도 오류 종류가 명확하게 표시됨.
+
+2) 계층 책임 명확.
+- Service가 SpringWeb에 의존하지 않도록 함.
+- ResponseStatusException를 사용하면 Service가 HttpStatus 받음.
+- Service는 게임이 없거나 종료됐다는 것만 암. 예외 변환은 ExceptionHandler가 담당.
+
+3) 응답 형식 통일
+- 오류마다 JSON 구조가 달라지는 걸 방지.
+- 가독성 상승과 더불어,
+- 클라가 "Task<ApiResult<T>>" 등의 공통 오류 응답 래퍼와 역직렬화 코드 짜기 편해짐.
+
+[6] 테스트
+
+1) GET /games/999 - 존재하지 않는 게임 조회
+- GameNotFoundException이 404 ErrorResponse로 변환되는지 확인.
+- Spring 기본 응답의 timestamp가 사라지는지 확인.
+- 예외가 가진 구체적인 message가 포함되는지 확인.
+
+요청 
+```http
+GET localhost:8080/games/999
+```
+
+응답 `404 Not Found`
+```json
+{
+    "status": 404,
+    "message": "게임을 찾을 수 없습니다. id=999",
+    "path": "/games/999",
+    "error": "Not Found"
+}
+```
+확인 결과:
+- timestamp가 없고 message가 추가됨. 명세와 일치 확인.
+
+2) PUT /games/9/progress - 종료된 게임 변경
+- GameFinishedException이 409 ErrorResponse로 변환되는지 확인한다.
+- 요청 본문은 검증을 통과할 수 있는 유효한 값으로 보낸다.
+
+요청
+```http
+PUT localhost:8080/games/9/progress
+```
+```json
+{
+  "currentHp": 50,
+  "currentFloor": 3,
+  "phase": "BATTLE",
+  "status": "PLAYING",
+  "deck": [
+    { "cardType": "STRIKE", "acquiredFloor": 0 }
+  ]
+}
+```
+
+응답 '409 Conflict'
+```json
+{
+    "status": 409,
+    "message": "이미 끝난 여정은 진행을 저장할 수 없습니다. id=9",
+    "path": "/games/9/progress",
+    "error": "Conflict"
+}
+```
+확인 결과:
+- 종료된 게임의 진행 변경 요청이 409를 반환.
+- 404와 동일한 ErrorResponse 구조 확인.
+
+3) PATCH /games/9 - 요청 본문 검증 400 회귀 테스트
+- 기존 MethodArgumentNotValidException 핸들러 동작 확인
+- 이름은 최소 2자이므로 한 글자 이름을 요청
+
+요청
+```http
+PATCH localhost:8080/games/9
+Content-Type: application/json
+```
+```json
+{
+    "playerName": "가" 
+}
+```
+
+응답 '400 Bad Request'
+```json
+{
+    "status": 400,
+    "message": "playerName 값이 올바르지 않습니다: 크기가 2에서 12 사이여야 합니다",
+    "path": "/games/9",
+    "error": "Bad Request"
+}
+```
+확인 결과: 
+- 기존 MethodArgumentNotValidException 핸들러 정상 동작 확인.
+- 400도 404, 409와 동일한 ErrorResponse 구조를 유지.
+
 ## M0
 
 ## M1

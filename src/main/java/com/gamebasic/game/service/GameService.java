@@ -1,6 +1,8 @@
 package com.gamebasic.game.service;
 
 import com.gamebasic.common.dto.RenameRequest;
+import com.gamebasic.common.exception.GameFinishedException;
+import com.gamebasic.common.exception.GameNotFoundException;
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
 import com.gamebasic.game.dto.GameSummaryResponse;
@@ -12,10 +14,8 @@ import com.gamebasic.runcard.dto.RunCardRequest;
 import com.gamebasic.runcard.entity.RunCard;
 import com.gamebasic.runcard.repository.RunCardRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +57,9 @@ public class GameService {
 
     private Game findGame(Long gameId) {
         return gameRepository.findById(gameId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .orElseThrow(() ->
+                    new GameNotFoundException(gameId)
+            );
     }
 
     @Transactional
@@ -65,7 +67,7 @@ public class GameService {
         Game game = findGame(gameId);
 
         if (game.isFinished()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+            throw new GameFinishedException(gameId);
         }
 
         game.updateProgress(
@@ -147,9 +149,10 @@ public class GameService {
      }
 
      // 더티 체킹:
+     // renameGame()은 @Transactional이 적용된 상태.
      // save가 없더라도, findGame은 gameRepository.findById()로 조회하기에,
-     // 반환된 Game은 영속 상태.
-     // 따라서 영속성 컨텍스트가 이 엔티티를 관리하고, 조회 시점의 값을 스냅샷으로 보관 중.
+     // 반환된 Game은
+     // 현재 트랜잭션의 영속성 컨텍스트에서 관리 및 조회 시점의 값을 스냅샷으로 보관 중.
      //
      // 그 상태에서 game.rename(...)으로 필드를 바꾸면, 스냅샷과 현재 값이 달라짐.
      // 트랙잭션이 커밋될 때, 하이버네이트가 flush를 수행, 관리 중인 엔티티들의 스냅샷과 현재값을 비교.
@@ -157,16 +160,15 @@ public class GameService {
      @Transactional
      public void renameGame(Long gameId, RenameRequest request){
         Game game = findGame(gameId);
+
         game.rename(request.getPlayerName());
      }
 
     @Transactional
      public void deleteGame(Long gameId){
         Game game = findGame(gameId);
+
         runCardRepository.deleteAllByGame(game);
         gameRepository.delete(game);
      }
-
-    // TODO (Lv 8): 플레이어 이름 변경 — 변경 감지로 수정
-    // TODO (Lv 8): 게임 삭제
 }
