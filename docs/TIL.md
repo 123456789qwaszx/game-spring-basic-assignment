@@ -1503,6 +1503,3 @@ localhost:8080/games/3/progress
 
 [7] http://localhost:8080/를 통해 게임 실행 확인
 - 게임 회차 삭제 동작 확인
-
-
-## M7

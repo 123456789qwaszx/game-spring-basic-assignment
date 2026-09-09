@@ -7,6 +7,7 @@ import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.entity.RunCard;
 import com.gamebasic.game.repository.GameRepository;
 import com.gamebasic.game.repository.RunCardRepository;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,10 @@ public class GameService {
             ProgressRequest request
     ){
         Game game = findGame(gameId);
+
+        if(game.isFinished()){
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        }
 
         game.updateProgress(
                 request.getCurrentHp(),

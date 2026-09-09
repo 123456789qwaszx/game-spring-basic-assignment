@@ -32,6 +32,11 @@ public class Game {
     @Column(nullable = false, length = 16)
     private GameStatus status;
 
+    public boolean isFinished(){
+        return status == GameStatus.CLEARED
+                || status == GameStatus.FAILED;
+    }
+
     public Game(String playerName){
         this.playerName = playerName;
         this.currentHp = 99;
