@@ -918,7 +918,17 @@ Content-Type: application/json
 - 기존 MethodArgumentNotValidException 핸들러 정상 동작 확인.
 - 400도 404, 409와 동일한 ErrorResponse 구조를 유지.
 
+===
+
 ## M0
+
+- 최소 GameService 및 GameController를 제외하고 삭제 완료.
+- rewrite용 DB 추가.
+
+- Java 21.0.12
+- Gradle 9.5.1
+- MySQL 8.0.46
+- DB: game_rewrite
 
 ## M1
 
