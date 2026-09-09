@@ -2,6 +2,8 @@ package com.gamebasic.game.service;
 
 import com.gamebasic.common.dto.ProgressRequest;
 import com.gamebasic.common.dto.RenameRequest;
+import com.gamebasic.common.exception.GameFinishedException;
+import com.gamebasic.common.exception.GameNotFoundException;
 import com.gamebasic.game.dto.*;
 import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.entity.RunCard;
@@ -38,7 +40,7 @@ public class GameService {
         Game game = findGame(gameId);
 
         if(game.isFinished()){
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+            throw new GameFinishedException(gameId);
         }
 
         game.updateProgress(
@@ -164,7 +166,7 @@ public class GameService {
     private Game findGame(Long gameId){
         return gameRepository.findById(gameId)
                 .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND)
+                        new GameNotFoundException(gameId)
                 );
     }
 }
