@@ -1054,6 +1054,49 @@ MySQL: 데이터를 실제로 저장
 
 ## M2
 
+[1] 요청 DTO 작성
+
+1) RunCardRequest
+@Getter
+@NoArgsConstructor
+public class RunCardRequest {
+
+    @NotBlank
+    private String cardType;
+
+    @NotNull
+    @Min(0)
+    @Max(10)
+    private Integer acquiredFloor;
+}
+
+2) CreateRequest
+@Getter
+@NoArgsConstructor
+public class CreateRequest {
+
+    @NotBlank
+    @Size(min = 2, max = 12)
+    private String playerName;
+
+    @NotEmpty
+    @Valid
+    private List<RunCardRequest> deck;
+}
+
+[1-1] deck의 @Valid 사용 이유
+- @Valid: 덱 내부의 각 RunCardRequest까지 검사.
+- @NotEmpty: 덱 자체가 Null이거나 빈 배열인지 검사.
+
+[1-2] acquiredFloor가 엔티티에서는 int, 요청 DTO에서는 Integer인 이유
+- 만약 요청에서 필드가 빠졌을 때:
+- int는 자동으로 0이 되어 누락을 구분할 수 없음.
+- Integer는 null이 되므로 @NotNull로 누락을 검출할 수 있음.
+
+[2] 응답 DTO 작성
+
+
+
 ## M3
 
 ## M4
