@@ -70,4 +70,13 @@ public class GameController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{gameId}")
+    public ResponseEntity<Void> deleteGame(
+        @PathVariable Long gameId
+    ){
+        gameService.deleteGame(gameId);
+
+        return ResponseEntity.noContent().build();
+    }
 }

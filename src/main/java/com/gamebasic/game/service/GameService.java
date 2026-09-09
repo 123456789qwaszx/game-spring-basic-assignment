@@ -108,6 +108,14 @@ public class GameService {
         game.rename(request.getPlayerName());
     }
 
+    @Transactional
+    public void deleteGame(Long gameId){
+        Game game = findGame(gameId);
+
+        runCardRepository.deleteAllByGame(game);
+        gameRepository.delete(game);
+    }
+
     private void saveDeck(
             Game game,
             List<RunCardRequest> deck
