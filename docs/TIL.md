@@ -1239,8 +1239,71 @@ ___Result___
 ___
 - DB 반영됨.
 
+[7] validation 작성
 
+1) Jackson(@RequestBody)이 JSON -> DTO 역직렬화
+2) @Valid를 보고 Bean Validation(카드 제약) 실행
+3) 위반한게 있으면 MethodArgumentNotValidException
+4) 차후 GlobalExceptionHandler가 ErrorResponse로 변환
+5) (통과 시에만) 메서드 본문 실행
 
+[8] validation 테스트
+
+1) 이름 글자 테스트
+요청
+```http
+localhost:8080/games
+```
+```json
+{
+  "playerName": "밤",
+  "deck": [
+    {
+      "cardType": "STRIKE",
+      "acquiredFloor": 0
+    }
+  ]
+}
+```
+
+응답 '400 Bad Request'
+```json
+{
+    "status": 400,
+    "message": "playerName값이 올바르지 않습니다: 크기가 2에서 12 사이여야 합니다",
+    "path": "/games",
+    "error": "Bad Request"
+}
+```
+
+2) 카드 내부 공백 검증
+요청
+```http
+localhost:8080/games
+```
+```json
+{
+  "playerName": "밤의 후계자",
+  "deck": [
+    {
+      "cardType": "   ",
+      "acquiredFloor": 11
+    }
+  ]
+}
+```
+
+응답 '400 Bad Request'
+```json
+{
+    "status": 400,
+    "message": "deck[0].cardType값이 올바르지 않습니다: 공백일 수 없습니다",
+    "path": "/games",
+    "error": "Bad Request"
+}
+
+확인 결과:
+- deck의 @Valid 연결 확인
 
 ## M3
 
