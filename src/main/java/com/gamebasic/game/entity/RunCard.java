@@ -1,4 +1,4 @@
-﻿package com.gamebasic.game.entity;
+package com.gamebasic.game.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

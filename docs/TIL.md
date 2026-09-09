@@ -932,6 +932,126 @@ Content-Type: application/json
 
 ## M1
 
+
+[1] Game과 RunCard를 JPA 엔티티로 만듬.
+
+[2] 두 객체의 단뱡향 관계가 SQL테이블과 FK로 어떻게 표현되는지 확인.
+- games.id: 게임 한 건을 식별하는 PK
+- run_cards.id: 카드 한 장을 식별하는 PK
+- run_cards.game_id: 카드가 어느 게임에 속하는지 나타내는 FK
+
+[3] 어노테이션
+1) @Entity
+- 이 클래스가 JPA에서 관리하는 엔티티라는 것을 나타낸다.
+- Hibernate는 엔티티의 필드와 어노테이션을 읽어 객체와 테이블을 연결한다. ddl-auto=update를 사용하는 현재 환경에서는 이 정보를 바탕으로 테이블과 컬럼도 갱신한다.
+
+2) @Table(name = "games")
+- 엔티티가 연결될 테이블 이름을 명시한다.
+- @Table이 없을 때의 이름은 Hibernate의 네이밍 전략에 따라 결정되므로, 프로젝트에서 사용하는 테이블 이름을 명확하게 고정하기 위해 작성
+
+3) @Index
+- game_id에 인덱스를 두면 데이터가 많아졌을 때 전체 테이블을 순회하지 않고 해당 게임의 카드를 찾는 데 도움이 된다.
+
+[4] 현재까지의 흐름을 정리하면
+Java 필드: game
+| @JoinColumn
+DB 컬럼: game_id
+| @Index
+DB 인덱스: idx_run_card_game
+
+@Index(
+    name = "idx_run_card_game",
+    columnList = "game_id"
+)
+
+>name = "idx_run_card_game": DB에 만들어 질 인덱스의 이름.  
+(idx = index / run_card = RunCard 테이블 / game = game 기준 인덱스)
+
+> columnList = "game_id"  
+- 인덱스를 적용할 DB 컬럼 이름을 지정
+- 여기에는 Java 필드 이름인 game이 아니라 실제 테이블의 컬럼 이름인 game_id를 적어야 함
+
+[5] 테스트
+
+1) 
+```sql
+mysql> USE game_rewrite;
+mysql> SHOW TABLES;
+```
+___Result___
+games
+run_cards
+___
+
+2) 
+```sql
+mysql> DESC games;
+```
+___Result___
+id	bigint	NO	PRI		auto_increment
+current_floor	int	NO			
+current_hp	int	NO			
+phase	enum('BATTLE','FINISHED','REWARD')	NO			
+player_name	varchar(12)	NO			
+status	enum('CLEARED','FAILED','PLAYING')	NO			
+___
+
+3) 
+```sql
+mysql> DESC run_cards;;
+```
+___Result___
+id	bigint	NO	PRI		auto_increment
+acquired_floor	int	NO			
+card_type	varchar(255)	NO			
+game_id	bigint	NO	MUL
+___
+
+4) RunCard의 JPA 설정이 실제 DB에 반영 되었는지 확인
+```sql
+mysql> SHOW CREATE TABLE run_cards;
+ ```
+___Result___
+run_cards	CREATE TABLE `run_cards` (
+   `id` bigint NOT NULL AUTO_INCREMENT,
+   `acquired_floor` int NOT NULL,
+   `card_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+   `game_id` bigint NOT NULL,
+   PRIMARY KEY (`id`),
+   KEY `idx_run_card_game` (`game_id`),
+   CONSTRAINT `FKp2ihkkwi75rttsbt7mptd9tkd` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`)
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+___
+
+확인결과:
+- `id`가 PK와 `AUTO_INCREMENT`로 생성됐다.
+- `cardType` Enum은 `card_type varchar(255)`로 생성됐다.
+- `game_id`는 `NOT NULL`로 생성됐다.
+- `idx_run_card_game` 인덱스가 생성됐다.
+- `game_id`가 `games.id`를 참조하는 FK로 생성됐다.
+
+
+[6] Hibernate
+
+지금 프로젝트의 층을 보면,
+Spring Data JPA (: 레포의 인터페이스를 편하게 쓰게 해주는 층)
+|
+JPA (: 명세. @Entity, @Id, EntityManager 등을 정의)
+|
+Hibernate(: 그 명세의 구현체. 실제로 SQL을 만들고 실행)
+|
+JDBC -> MySQL
+
+Spring Data JPA: Repository 인터페이스와 메서드 이름 기반 쿼리를 제공
+JPA: @Entity, @Id, EntityManager 등의 표준을 정의
+Hibernate: JPA 명세를 구현하고 실제 SQL을 생성·실행
+JDBC: Java 애플리케이션과 MySQL 사이의 통신 담당
+MySQL: 데이터를 실제로 저장
+
+- 즉 Hibernate란, JPA의 명세를 토대로 실제 SQL을 실행하는 엔진.
+- 영속성 컨텍스트는 JPA가 정의한 개념이고, Hibernate가 이를 실제로 구현
+- 더티 체킹도 Hibernate가 제공하는 JPA 구현 기능이다. 트랜잭션 안에서 조회한 엔티티의 상태가 변경되면, 커밋 직전 flush 과정에서 기존 상태와 현재 상태를 비교해 필요한 UPDATE를 실행
+
 ## M2
 
 ## M3
