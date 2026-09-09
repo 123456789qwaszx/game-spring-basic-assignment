@@ -1095,6 +1095,151 @@ public class CreateRequest {
 
 [2] 응답 DTO 작성
 
+[3] GameService 작성
+@Transactional
+public GameDetailResponse createGame(CreateRequest request) {
+    Game game = gameRepository.save(
+            new Game(request.getPlayerName()));
+
+    saveDeck(game, request.getDeck());
+
+    List<RunCard> cards =
+            runCardRepository.findAllByGameOrderByIdAsc(game);
+
+    return toDetailResponse(game, cards);
+}
+
+1) createRequest
+2) Game 생성 및 INSERT
+3) 생성된 Game을 각 RunCard의 FK로 사용
+4) RunCard를 요청 순서대로 INSERT
+5) 카드를 ID 오름 차순으로 다시 조회
+6) GameDetailResponse 생성
+
+[4] GameController 작성
+
+@RestController
+@RequestMapping("/games")
+public class GameController {
+
+    private final GameService gameService;
+
+    public GameController(GameService gameService) {
+        this.gameService = gameService;
+    }
+
+    @PostMapping
+    public ResponseEntity<GameDetailResponse> createGame(
+            @Valid @RequestBody CreateRequest request
+    ){
+        GameDetailResponse response =
+                gameService.createGame(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
+}
+
+- @RequestMapping("/games")와 @PostMapping을 합치면 POST / games API가 됨.
+
+- @RequestBody: 요청 JSON을 CreateRequest 객체로 변환
+- @Valid까지 성공 시, gameService.createGame(request) 호출.
+
+[5] GameRepository를 사용 가능한 이유
+- 인터페이스 본문이 비어있음에도, JpaRepository로부터 이미 메서드를 상속 받음.
+- <S extends Game> S save(S entity);
+Optional<Game> findById(Lond id);
+List<Game> findAll();
+void delete(Game entity);
+void deleteById(Long id)
+
+- Game과의 연결은 인터페이스 본문이 아니라, extends 뒤의 제네릭 인자에서 이어짐.
+
+게임을 보면, 
+@Entity
+@Table(name = "games")
+public class Game {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+}
+이를 Repository 선언과 대응시키면
+JpaRepository<Game(관리할 엔티티), Long(Game.id의 타입)>
+
+- 만약 save를 호출하면, JpaRepository<Game, Long>에서 Game을 알아낸 뒤
+- JPA 설정을 읽음(@Entity, Table(name = "games"))
+- 따라서 Hibernate가 개념적으로 아래 SQL을 실행.
+```sql
+INSERT INTO games (
+    player_name,
+    current_hp,
+    current_floor,
+    phase,
+    status
+)
+VALUES (?, ?, ?, ?, ?);
+```
+
+[6] 테스트
+
+1) PostMan 사용한 입력
+요청
+```http
+Post localhost:8080/games
+```
+```json
+{
+  "playerName": "밤의 후계자",
+  "deck": [
+    {
+      "cardType": "STRIKE",
+      "acquiredFloor": 0
+    },
+    {
+      "cardType": "GUARD",
+      "acquiredFloor": 0
+    }
+  ]
+}
+```
+
+응답 '201 Created'
+```json
+{
+    "id": 1,
+    "playerName": "밤의 후계자",
+    "currentHp": 99,
+    "currentFloor": 1,
+    "phase": "REWARD",
+    "status": "PLAYING",
+    "deck": [
+        {
+            "id": 1,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 2,
+            "cardType": "GUARD",
+            "acquiredFloor": 0
+        }
+    ]
+}
+```
+
+2) MySql 확인
+```sql
+mysql> SELECT id, game_id, card_type, acquired_floor FROM run_cards ORDER BY id;
+```
+___Result___
+1	1	STRIKE	0
+2	1	GUARD	0
+___
+- DB 반영됨.
+
+
 
 
 ## M3

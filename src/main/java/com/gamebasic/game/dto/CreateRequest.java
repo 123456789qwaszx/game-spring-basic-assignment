@@ -1,4 +1,4 @@
-﻿package com.gamebasic.game.dto;
+package com.gamebasic.game.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
