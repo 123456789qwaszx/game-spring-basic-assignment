@@ -1488,4 +1488,14 @@ localhost:8080/games/3/progress
 
 ## M6
 
+[1] RenameRequest 추가
+
+[2] rename Service 메서드 추가
+
+[3] renameGame API 작성
+
+[4] http://localhost:8080/를 통해 게임 실행 확인
+- 이름 변경 동작 확인
+
+
 ## M7

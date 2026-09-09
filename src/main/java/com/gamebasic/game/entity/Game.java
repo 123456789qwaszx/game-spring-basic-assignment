@@ -51,4 +51,8 @@ public class Game {
         this.phase = phase;
         this.status = status;
     }
+
+    public void rename(String playerName){
+        this.playerName = playerName;
+    }
 }

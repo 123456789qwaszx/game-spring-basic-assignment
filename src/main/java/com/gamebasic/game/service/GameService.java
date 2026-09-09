@@ -1,6 +1,7 @@
 package com.gamebasic.game.service;
 
 import com.gamebasic.common.dto.ProgressRequest;
+import com.gamebasic.common.dto.RenameRequest;
 import com.gamebasic.game.dto.*;
 import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.entity.RunCard;
@@ -95,6 +96,16 @@ public class GameService {
         }
 
         return response;
+    }
+
+    @Transactional
+    public void renameGame(
+            Long gameId,
+            RenameRequest request
+    ){
+        Game game = findGame(gameId);
+
+        game.rename(request.getPlayerName());
     }
 
     private void saveDeck(

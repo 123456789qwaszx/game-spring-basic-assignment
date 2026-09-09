@@ -1,6 +1,7 @@
 package com.gamebasic.game.controller;
 
 import com.gamebasic.common.dto.ProgressRequest;
+import com.gamebasic.common.dto.RenameRequest;
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
 import com.gamebasic.game.dto.GameSummaryResponse;
@@ -58,5 +59,15 @@ public class GameController {
         return ResponseEntity.ok(
                 gameService.getGames()
         );
+    }
+
+    @PatchMapping("/{gameId}")
+    public ResponseEntity<Void> renameGame(
+            @PathVariable Long gameId,
+            @Valid @RequestBody RenameRequest request
+    ){
+        gameService.renameGame(gameId, request);
+
+        return ResponseEntity.noContent().build();
     }
 }
