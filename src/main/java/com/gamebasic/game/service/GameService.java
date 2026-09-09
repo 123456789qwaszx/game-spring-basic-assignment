@@ -8,8 +8,10 @@ import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.entity.RunCard;
 import com.gamebasic.game.repository.GameRepository;
 import com.gamebasic.game.repository.RunCardRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +36,19 @@ public class GameService {
                 new Game(request.getPlayerName()));
 
         saveDeck(game, request.getDeck());
+
+        List<RunCard> cards =
+                runCardRepository.findAllByGameOrderByIdAsc(game);
+
+        return toDetailResponse(game, cards);
+    }
+
+    @Transactional(readOnly = true)
+    public GameDetailResponse getGame(Long gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND)
+                );
 
         List<RunCard> cards =
                 runCardRepository.findAllByGameOrderByIdAsc(game);

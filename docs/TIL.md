@@ -1307,6 +1307,46 @@ localhost:8080/games
 
 ## M3
 
+[1] getGame 작성
+
+[2] GetMapping 연결
+
+[3] 테스트 완료
+
+요청
+```
+http://localhost:8080/games/3
+```
+
+응답
+```json
+{
+    "id": 3,
+    "playerName": "M3 조회 테스트",
+    "currentHp": 99,
+    "currentFloor": 1,
+    "phase": "REWARD",
+    "status": "PLAYING",
+    "deck": [
+        {
+            "id": 6,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 7,
+            "cardType": "GUARD",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 8,
+            "cardType": "MEND",
+            "acquiredFloor": 0
+        }
+    ]
+}
+```
+
 ## M4
 
 ## M5
