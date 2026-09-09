@@ -1,0 +1,42 @@
+﻿package com.gamebasic.game.entity;
+
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Entity
+@Table(name = "games")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Game {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 12)
+    private String playerName;
+
+    @Column(nullable = false)
+    private int currentHp;
+
+    @Column(nullable = false)
+    private int currentFloor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private GamePhase phase;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private GameStatus status;
+
+    public Game(String playerName){
+        this.playerName = playerName;
+        this.currentHp = 99;
+        this.currentFloor = 1;
+        this.phase = GamePhase.REWARD;
+        this.status = GameStatus.PLAYING;
+    }
+}
