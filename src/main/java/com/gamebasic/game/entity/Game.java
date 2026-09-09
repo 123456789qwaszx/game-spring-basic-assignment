@@ -39,4 +39,16 @@ public class Game {
         this.phase = GamePhase.REWARD;
         this.status = GameStatus.PLAYING;
     }
+
+    public void updateProgress(
+            int currentHp,
+            int currentFloor,
+            GamePhase phase,
+            GameStatus status
+    ){
+        this.currentHp = currentHp;
+        this.currentFloor = currentFloor;
+        this.phase = phase;
+        this.status = status;
+    }
 }
