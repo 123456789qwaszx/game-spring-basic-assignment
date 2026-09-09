@@ -20,7 +20,7 @@ public class ProgressRequest {
     @NotNull
     @Min(0)
     @Max(99)
-    private Integer currnetHp;
+    private Integer currentHp;
 
     @NotNull
     @Min(1)

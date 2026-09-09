@@ -1349,6 +1349,128 @@ http://localhost:8080/games/3
 
 ## M4
 
+[1] ProgressRequest 작성
+
+[2] Service에 updateProgress 작성
+
+1) 흐름:
+-> Game 3 조회
+-> Game의 HP, Floor, phase, status 변경
+-> Game 3의 기존 카드 모두 삭제
+-> 요청 받은 카드 새로 저장
+-> 새 카드 목록 조회 하여 response 작성 및 반환
+-> 트랜잭션 커밋
+
+2) Game은 수정인데, Deck은 교체하는 이유
+- Game은 gameId가 요청 경로에 있기에 식별 가능.
+- 반면 요청 카드에는 기존 카드 ID가 없음.
+- RunCardRequest는 cardType, acquiredFloor 뿐.
+- 따라서 서버는 기존 카드 중 어느 행인지 알 수 없음.
+
+3) 덱 전체 교체 vs 카드 개별 수정
+
+전체 교체:
+- 저장 할 때마다 모든 카드 DELETE/INSERT
+- 카드 ID가 매번 바뀜.
+- 카드 수가 많으면 비효율적.
+
+- 현재 클라가 전체 덱을 전송함
+- 카드 ID를 외부에서 참조 하지 않음
+- 정확한 최종 상태 저장 보장.
+
+카드 개별 수정을 구현한다면,
+- RunCardRequest에 카드 ID가 들어가야함.
+- 그걸 토대로 서버가 비교:
+ 1) 기존에 있고 요청에도 있음 -> 유지 또는 수정
+ 2) 기존에는 있고 요청에는 없음 -> 삭제
+ 3) 기존에는 없고 요청에만 있음 -> 추가
+
+- 기존 카드와 요청 카드 매칭
+- 추가/유지/삭제 분류
+- 중복 ID 검증
+- 다른 Game의 카드 ID 구분
+- 누락과 위조 처리
+- 개별 카드의 정체성 관리
+
+위와 같이 로직과 개념이 추가됨.
+
+장점
+- 기존 20장을 20DELETE, 20INSERT 대신 변경된 카드만 처리 할 수 있음.
+- 카드별 이력을 남길 수 있어 버그나 통계 조사에 유리.
+- 강화, 합성 등 동작별 API 추가 가능.
+- 카드 ID가 유지되기에, 참조 가능해짐.
+
+[3] GameController에 updateProgress API 연결
+
+
+[4] 테스트
+
+요청
+```http
+localhost:8080/games/3/progress
+```
+```json
+{
+  "currentHp": 74,
+  "currentFloor": 2,
+  "phase": "BATTLE",
+  "status": "PLAYING",
+  "deck": [
+    {
+      "cardType": "STRIKE",
+      "acquiredFloor": 0
+    },
+    {
+      "cardType": "GUARD",
+      "acquiredFloor": 0
+    },
+    {
+      "cardType": "MEND",
+      "acquiredFloor": 0
+    },
+    {
+      "cardType": "BLOOD_RUNE",
+      "acquiredFloor": 1
+    }
+  ]
+}
+```
+
+응답 '200 OK'
+```json
+{
+    "id": 3,
+    "playerName": "M3 조회 테스트",
+    "currentHp": 74,
+    "currentFloor": 2,
+    "phase": "BATTLE",
+    "status": "PLAYING",
+    "deck": [
+        {
+            "id": 9,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 10,
+            "cardType": "GUARD",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 11,
+            "cardType": "MEND",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 12,
+            "cardType": "BLOOD_RUNE",
+            "acquiredFloor": 1
+        }
+    ]
+}
+```
+
+
 ## M5
 
 ## M6

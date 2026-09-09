@@ -1,5 +1,6 @@
 package com.gamebasic.game.service;
 
+import com.gamebasic.common.dto.ProgressRequest;
 import com.gamebasic.game.dto.CardResponse;
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
@@ -31,6 +32,30 @@ public class GameService {
     }
 
     @Transactional
+    public GameDetailResponse updateProgress(
+            Long gameId,
+            ProgressRequest request
+    ){
+        Game game = findGame(gameId);
+
+        game.updateProgress(
+                request.getCurrentHp(),
+                request.getCurrentFloor(),
+                request.getPhase(),
+                request.getStatus()
+        );
+
+        runCardRepository.deleteAllByGame(game);
+
+        saveDeck(game, request.getDeck());
+
+        List<RunCard> cards =
+                runCardRepository.findAllByGameOrderByIdAsc(game);
+
+        return toDetailResponse(game, cards);
+    }
+
+    @Transactional
     public GameDetailResponse createGame(CreateRequest request) {
         Game game = gameRepository.save(
                 new Game(request.getPlayerName()));
@@ -45,10 +70,7 @@ public class GameService {
 
     @Transactional(readOnly = true)
     public GameDetailResponse getGame(Long gameId) {
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND)
-                );
+        Game game = findGame(gameId);
 
         List<RunCard> cards =
                 runCardRepository.findAllByGameOrderByIdAsc(game);
@@ -94,5 +116,12 @@ public class GameService {
                 game.getStatus(),
                 deck
         );
+    }
+
+    private Game findGame(Long gameId){
+        return gameRepository.findById(gameId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND)
+                );
     }
 }

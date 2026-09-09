@@ -1,5 +1,6 @@
 package com.gamebasic.game.controller;
 
+import com.gamebasic.common.dto.ProgressRequest;
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
 import com.gamebasic.game.service.GameService;
@@ -36,6 +37,16 @@ public class GameController {
     ){
         return ResponseEntity.ok(
                 gameService.getGame(gameId)
+        );
+    }
+
+    @PutMapping("/{gameId}/progress")
+    public ResponseEntity<GameDetailResponse> updateProgress(
+            @PathVariable Long gameId,
+            @Valid @RequestBody ProgressRequest request
+    ){
+        return ResponseEntity.ok(
+                gameService.updateProgress(gameId, request)
         );
     }
 }
