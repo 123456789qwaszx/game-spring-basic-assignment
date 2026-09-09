@@ -1,10 +1,7 @@
 package com.gamebasic.game.service;
 
 import com.gamebasic.common.dto.ProgressRequest;
-import com.gamebasic.game.dto.CardResponse;
-import com.gamebasic.game.dto.CreateRequest;
-import com.gamebasic.game.dto.GameDetailResponse;
-import com.gamebasic.game.dto.RunCardRequest;
+import com.gamebasic.game.dto.*;
 import com.gamebasic.game.entity.Game;
 import com.gamebasic.game.entity.RunCard;
 import com.gamebasic.game.repository.GameRepository;
@@ -76,6 +73,28 @@ public class GameService {
                 runCardRepository.findAllByGameOrderByIdAsc(game);
 
         return toDetailResponse(game, cards);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GameSummaryResponse> getGames() {
+        List<Game> games =
+                gameRepository.findAllByOrderByIdDesc();
+
+        List<GameSummaryResponse> response =
+                new ArrayList<>();
+
+        for (Game game : games){
+            response.add(new GameSummaryResponse(
+                    game.getId(),
+                    game.getPlayerName(),
+                    game.getCurrentHp(),
+                    game.getCurrentFloor(),
+                    game.getPhase(),
+                    game.getStatus()
+            ));
+        }
+
+        return response;
     }
 
     private void saveDeck(

@@ -3,11 +3,14 @@ package com.gamebasic.game.controller;
 import com.gamebasic.common.dto.ProgressRequest;
 import com.gamebasic.game.dto.CreateRequest;
 import com.gamebasic.game.dto.GameDetailResponse;
+import com.gamebasic.game.dto.GameSummaryResponse;
 import com.gamebasic.game.service.GameService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/games")
@@ -47,6 +50,13 @@ public class GameController {
     ){
         return ResponseEntity.ok(
                 gameService.updateProgress(gameId, request)
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<List<GameSummaryResponse>> getGames() {
+        return ResponseEntity.ok(
+                gameService.getGames()
         );
     }
 }

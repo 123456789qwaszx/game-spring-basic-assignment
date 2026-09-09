@@ -1473,6 +1473,19 @@ localhost:8080/games/3/progress
 
 ## M5
 
+[1] 조회용 DTO 작성(GameSummaryResponse)
+
+[2] GameRepository에 커스텀 쿼리 메서드 추가
+- findAllByOrderByIdDesc()
+- 이름 자체가 명세.
+
+[3] GameService에 조회 메서드를 활용한 목록을 반환하는 메서드 추가
+
+[4] Controller에 getGames 조회 API 추가
+
+[5] http://localhost:8080/를 통해 게임 실행 확인
+- 저장된 게임 목록 및 이어하기 완료.
+
 ## M6
 
 ## M7
