@@ -12,6 +12,10 @@ import java.util.stream.IntStream;
 
 public final class RankingRecordFixture {
 
+    static final long VALID_RECORD_ID = 1L;
+    static final String VALID_PLAYER_ID = "player-1";
+    static final String VALID_PLAYER_NAME = "정상 플레이어";
+
     static final String VALID_STATUS = "CLEARED";
     static final int VALID_CLEARED_FLOOR = 10;
     static final int VALID_DURATION_SECONDS = 300;
@@ -209,6 +213,13 @@ public final class RankingRecordFixture {
 
     public static final class Builder {
 
+        private Long recordId = VALID_RECORD_ID;
+
+        private RankingRecord.Player player =
+                new RankingRecord.Player(
+                        VALID_PLAYER_ID,
+                        VALID_PLAYER_NAME
+                );
         private String status = VALID_STATUS;
         private Integer clearedFloor = VALID_CLEARED_FLOOR;
         private Integer durationSeconds = VALID_DURATION_SECONDS;
@@ -216,6 +227,24 @@ public final class RankingRecordFixture {
         private RankingRecord.Deck deck = VALID_DECK;
 
         private RankingRecord.BossFight bossFight = VALID_BOSS_FIGHT;
+
+        public Builder recordId(Long recordId) {
+            this.recordId = recordId;
+            return this;
+        }
+
+        public Builder player(
+                String playerId,
+                String playerName
+        ) {
+            this.player =
+                    new RankingRecord.Player(
+                            playerId,
+                            playerName
+                    );
+
+            return this;
+        }
 
         public Builder status(String status) {
             this.status = status;
@@ -251,6 +280,8 @@ public final class RankingRecordFixture {
 
         public RankingRecord build() {
             return new RankingRecord(
+                    recordId,
+                    player,
                     status,
                     clearedFloor,
                     durationSeconds,

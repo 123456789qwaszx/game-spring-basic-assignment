@@ -20,6 +20,74 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RankingPolicyTest {
 
     @Test
+    @DisplayName("정상 기록을 시간, HP, 기록 ID 우선순위로 정렬한다")
+    void validRecordsAreSortedByRankingOrder() {
+        // 시간이 가장 짧아서 1순위
+        RankingRecord fastestRecord =
+                validCandidate()
+                        .recordId(50L)
+                        .durationSeconds(300)
+                        .finalHp(1)
+                        .build();
+
+        // 같은 500초 기록 중 HP가 가장 높아서 우선
+        RankingRecord highHpRecord =
+                validCandidate()
+                        .recordId(20L)
+                        .durationSeconds(500)
+                        .finalHp(90)
+                        .build();
+
+        // 시간과 HP가 같으므로 ID 2가 ID 10보다 우선
+        RankingRecord lowerIdRecord =
+                validCandidate()
+                        .recordId(2L)
+                        .durationSeconds(500)
+                        .finalHp(50)
+                        .build();
+
+        RankingRecord higherIdRecord =
+                validCandidate()
+                        .recordId(10L)
+                        .durationSeconds(500)
+                        .finalHp(50)
+                        .build();
+
+        // HP가 높아도 시간이 느리므로 마지막
+        RankingRecord slowestRecord =
+                validCandidate()
+                        .recordId(1L)
+                        .durationSeconds(700)
+                        .finalHp(99)
+                        .build();
+
+        RankingPolicy policy =
+                policyWith(candidate -> VALID);
+
+        RankingScreeningResult result =
+                policy.screen(
+                        List.of(
+                                higherIdRecord,
+                                slowestRecord,
+                                highHpRecord,
+                                fastestRecord,
+                                lowerIdRecord
+                        )
+                );
+
+        assertEquals(
+                List.of(
+                        fastestRecord,
+                        highHpRecord,
+                        lowerIdRecord,
+                        higherIdRecord,
+                        slowestRecord
+                ),
+                result.validRecords()
+        );
+    }
+
+    @Test
     @DisplayName("참가 대상이며 정상인 기록은 정상 목록에 포함한다")
     void eligibleValidRecordIsIncluded() {
         RankingRecord record =

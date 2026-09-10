@@ -3,6 +3,8 @@ package com.gamebasic.ranking.core.model;
 import java.util.List;
 
 public record RankingRecord(
+        Long recordId,
+        Player player,
         String status,
         Integer clearedFloor,
         Integer durationSeconds,
@@ -10,6 +12,12 @@ public record RankingRecord(
         Deck deck,
         BossFight bossFight
 ) {
+
+    public record Player(
+            String id,
+            String name
+    ) {
+    }
 
     public record Deck(
             Integer declaredSize,
