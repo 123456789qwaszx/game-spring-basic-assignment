@@ -18,4 +18,9 @@ public interface RunCardRepository extends JpaRepository<RunCard, Long> {
     // FROM run_cards
     // WHERE game_id = ?;
     void deleteAllByGame(Game game);
+
+    // SELECT COUNT(*)
+    // FROM run_cards
+    // WHERE game_id = ?;
+    long countByGame(Game game);
 }

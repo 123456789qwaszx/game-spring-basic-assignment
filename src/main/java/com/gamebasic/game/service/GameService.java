@@ -92,6 +92,9 @@ public class GameService {
                 new ArrayList<>();
 
         for (Game game : games){
+            long deckSize =
+                    runCardRepository.countByGame(game);
+
             response.add(new GameSummaryResponse(
                     game.getId(),
                     game.getPlayerName(),
@@ -99,6 +102,7 @@ public class GameService {
                     game.getCurrentFloor(),
                     game.getPhase(),
                     game.getStatus(),
+                    deckSize,
                     game.getCreatedAt(),
                     game.getUpdatedAt()
             ));

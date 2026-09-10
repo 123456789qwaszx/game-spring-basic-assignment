@@ -18,6 +18,8 @@ public class GameSummaryResponse {
     private GamePhase phase;
     private GameStatus status;
 
+    private long deckSize;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

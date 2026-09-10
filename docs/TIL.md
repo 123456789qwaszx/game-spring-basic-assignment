@@ -1115,6 +1115,20 @@ GET localhost:8080/games/4
 }
 ```
 
+[5] 카드 수 집계 1+N 버전부터 작성
+
+- 목록 API 
+요청:
+GET http://localhost:8080/games
+
+서버:
+Hibernate: select g1_0.id,g1_0.created_at,g1_0.current_floor,g1_0.current_hp,g1_0.phase,g1_0.player_name,g1_0.status,g1_0.updated_at from games g1_0 order by g1_0.id desc
+Hibernate: select count(rc1_0.id) from run_cards rc1_0 where rc1_0.game_id=?
+Hibernate: select count(rc1_0.id) from run_cards rc1_0 where rc1_0.game_id=?
+Hibernate: select count(rc1_0.id) from run_cards rc1_0 where rc1_0.game_id=?
+
+- 게임 목록 조회 1회, 카드 수 조회 3회 / 총합 4회 확인.
+
 
 ===
 
