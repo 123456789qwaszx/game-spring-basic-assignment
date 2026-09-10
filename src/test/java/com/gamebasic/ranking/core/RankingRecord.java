@@ -7,7 +7,8 @@ public record RankingRecord(
         Integer clearedFloor,
         Integer durationSeconds,
         Integer finalHp,
-        Deck deck
+        Deck deck,
+        BossFight bossFight
 ) {
 
     public record Deck(
@@ -21,6 +22,23 @@ public record RankingRecord(
         public record Card(
                 String cardType,
                 Integer acquiredFloor
+        ) {
+        }
+    }
+
+    public record BossFight(
+            List<Phase> phases,
+            String finishedCard,
+            Integer totalTurns
+    ) {
+        public BossFight {
+            phases = List.copyOf(phases);
+        }
+
+        public record Phase(
+                String phase,
+                Integer turns,
+                Integer damageTaken
         ) {
         }
     }

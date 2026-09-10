@@ -21,7 +21,8 @@ class RecordDiagnosticTest {
                                 new FinalHpInvariant(),
                                 new DeckSizeInvariant(),
                                 new CardTypeInvariant(ALLOWED_CARD_TYPES),
-                                new AcquiredFloorInvariant()
+                                new AcquiredFloorInvariant(),
+                                new BossPhaseInvariant()
                         )
                 );
 

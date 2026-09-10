@@ -36,6 +36,34 @@ final class RankingRecordFixture {
                     .map(Enum::name)
                     .collect(Collectors.toUnmodifiableSet());
 
+    static final int VALID_PHASE_TURNS = 1;
+    static final int VALID_DAMAGE_TAKEN = 0;
+    static final String VALID_FINISHING_CARD = "STRIKE";
+    static final int VALID_BOSS_TOTAL_TURNS = 3;
+
+    static final RankingRecord.BossFight VALID_BOSS_FIGHT =
+            new RankingRecord.BossFight(
+                    List.of(
+                            phase(
+                                    "THRONE",
+                                    VALID_PHASE_TURNS,
+                                    VALID_DAMAGE_TAKEN
+                            ),
+                            phase(
+                                    "UNBOUND",
+                                    VALID_PHASE_TURNS,
+                                    VALID_DAMAGE_TAKEN
+                            ),
+                            phase(
+                                    "ECLIPSE",
+                                    VALID_PHASE_TURNS,
+                                    VALID_DAMAGE_TAKEN
+                            )
+                    ),
+                    VALID_FINISHING_CARD,
+                    VALID_BOSS_TOTAL_TURNS
+            );
+
     private RankingRecordFixture() {
     }
 
@@ -84,6 +112,33 @@ final class RankingRecordFixture {
         );
     }
 
+    static RankingRecord.BossFight.Phase phase(
+            String phase,
+            Integer turns,
+            Integer damageTaken
+    ) {
+        return new RankingRecord.BossFight.Phase(
+                phase,
+                turns,
+                damageTaken
+        );
+    }
+
+    static RankingRecord.BossFight bossFightWithPhases(
+            List<RankingRecord.BossFight.Phase> phases
+    ) {
+        int totalTurns =
+                phases.stream()
+                        .mapToInt(RankingRecord.BossFight.Phase::turns)
+                        .sum();
+
+        return new RankingRecord.BossFight(
+                phases,
+                VALID_FINISHING_CARD,
+                totalTurns
+        );
+    }
+
     static final class Builder {
 
         private String status = VALID_STATUS;
@@ -91,6 +146,8 @@ final class RankingRecordFixture {
         private Integer durationSeconds = VALID_DURATION_SECONDS;
         private Integer finalHp = VALID_FINAL_HP;
         private RankingRecord.Deck deck = VALID_DECK;
+
+        private RankingRecord.BossFight bossFight = VALID_BOSS_FIGHT;
 
         Builder status(String status) {
             this.status = status;
@@ -117,13 +174,21 @@ final class RankingRecordFixture {
             return this;
         }
 
+        Builder bossFight(
+                RankingRecord.BossFight bossFight
+        ) {
+            this.bossFight = bossFight;
+            return this;
+        }
+
         RankingRecord build() {
             return new RankingRecord(
                     status,
                     clearedFloor,
                     durationSeconds,
                     finalHp,
-                    deck
+                    deck,
+                    bossFight
             );
         }
     }
