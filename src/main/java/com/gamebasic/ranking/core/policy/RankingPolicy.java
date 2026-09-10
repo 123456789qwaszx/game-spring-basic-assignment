@@ -6,9 +6,7 @@ import com.gamebasic.ranking.core.model.RankingRecord;
 import com.gamebasic.ranking.core.validation.RecordDiagnostic;
 import com.gamebasic.ranking.core.validation.RecordVerdict;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class RankingPolicy {
 
@@ -69,9 +67,31 @@ public class RankingPolicy {
 
         validRecords.sort(RANKING_ORDER);
 
+        List<RankingRecord> bestRecords =
+                selectBestRecordPerPlayer(validRecords);
+
         return new RankingScreeningResult(
-                validRecords,
+                bestRecords,
                 excludedCount
         );
+    }
+
+    private List<RankingRecord> selectBestRecordPerPlayer(
+            List<RankingRecord> sortedRecords
+    ) {
+        Set<String> seenPlayerIds = new HashSet<>();
+
+        List<RankingRecord> bestRecords = new ArrayList<>();
+
+        for (RankingRecord record : sortedRecords) {
+            String playerId =
+                    record.player().id();
+
+            if (seenPlayerIds.add(playerId)) {
+                bestRecords.add(record);
+            }
+        }
+
+        return bestRecords;
     }
 }

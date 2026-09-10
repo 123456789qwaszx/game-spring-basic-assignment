@@ -19,6 +19,65 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RankingPolicyTest {
 
+    // 입력 순서가 아니라 정렬 결과를 기준으로 최고 기록을 고른다.
+    // 같은 player.id에서는 하나만 유지한다.
+    // 중복으로 빠진 정상 기록은 excludedCount에 포함하지 않는다.
+    // 플레이어 이름이 같아도 player.id가 다르면 서로 다른 플레이어다.
+    @Test
+    @DisplayName("플레이어별로 정렬 순서상 가장 좋은 정상 기록 하나만 유지한다")
+    void bestRecordPerPlayerIsKept() {
+        RankingRecord inferiorRecord =
+                validCandidate()
+                        .recordId(1L)
+                        .player("player-a", "같은 이름")
+                        .durationSeconds(500)
+                        .finalHp(90)
+                        .build();
+
+        RankingRecord sameNameDifferentPlayer =
+                validCandidate()
+                        .recordId(2L)
+                        .player("player-b", "같은 이름")
+                        .durationSeconds(450)
+                        .finalHp(50)
+                        .build();
+
+        RankingRecord bestRecord =
+                validCandidate()
+                        .recordId(3L)
+                        .player("player-a", "같은 이름")
+                        .durationSeconds(400)
+                        .finalHp(30)
+                        .build();
+
+        RankingPolicy policy =
+                policyWith(
+                        candidate -> VALID
+                );
+
+        RankingScreeningResult result =
+                policy.screen(
+                        List.of(
+                                inferiorRecord,
+                                sameNameDifferentPlayer,
+                                bestRecord
+                        )
+                );
+
+        assertEquals(
+                List.of(
+                        bestRecord,
+                        sameNameDifferentPlayer
+                ),
+                result.validRecords()
+        );
+
+        assertEquals(
+                0,
+                result.excludedCount()
+        );
+    }
+
     @Test
     @DisplayName("정상 기록을 시간, HP, 기록 ID 우선순위로 정렬한다")
     void validRecordsAreSortedByRankingOrder() {
@@ -26,6 +85,7 @@ class RankingPolicyTest {
         RankingRecord fastestRecord =
                 validCandidate()
                         .recordId(50L)
+                        .player("player-fastest", "가장 빠른 플레이어")
                         .durationSeconds(300)
                         .finalHp(1)
                         .build();
@@ -34,6 +94,7 @@ class RankingPolicyTest {
         RankingRecord highHpRecord =
                 validCandidate()
                         .recordId(20L)
+                        .player("player-high-hp", "HP가 높은 플레이어")
                         .durationSeconds(500)
                         .finalHp(90)
                         .build();
@@ -42,6 +103,7 @@ class RankingPolicyTest {
         RankingRecord lowerIdRecord =
                 validCandidate()
                         .recordId(2L)
+                        .player("player-lower-id", "낮은 ID 플레이어")
                         .durationSeconds(500)
                         .finalHp(50)
                         .build();
@@ -49,6 +111,7 @@ class RankingPolicyTest {
         RankingRecord higherIdRecord =
                 validCandidate()
                         .recordId(10L)
+                        .player("player-higher-id", "높은 ID 플레이어")
                         .durationSeconds(500)
                         .finalHp(50)
                         .build();
@@ -57,6 +120,7 @@ class RankingPolicyTest {
         RankingRecord slowestRecord =
                 validCandidate()
                         .recordId(1L)
+                        .player("player-slowest", "가장 느린 플레이어")
                         .durationSeconds(700)
                         .finalHp(99)
                         .build();
