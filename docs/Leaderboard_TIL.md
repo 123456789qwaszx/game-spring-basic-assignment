@@ -4,6 +4,14 @@
 1. 외부 랭킹 JSON
 - 믿을 수 없는 표현 층의 데이터
 
+1.1. RankingClient
+- 외부 랭킹 API에 HTTP 요청
+- JSON을 RankingSource 객체로 역직렬화
+
+1.2. RankingSource
+- 랭킹 판정과 응답 구성에 필요한 필드를 받는 DTO
+- 외부 JSON 필드 이름과 구조를 그대로 표현.
+
 2. RankingSourceMapper
 - Ranking 시스템 내부 언어로 번역
 - 값을 보정하지 않음
