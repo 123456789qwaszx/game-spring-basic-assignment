@@ -1,0 +1,14 @@
+package com.gamebasic.ranking.core.validation;
+
+public enum RecordVerdict {
+    VALID,
+    INVALID_DURATION,
+    INVALID_HP,
+    INVALID_DECK_SIZE,
+    INVALID_CARD_TYPE,
+    INVALID_ACQUIRED_FLOOR,
+    INVALID_BOSS_PHASES,
+    INVALID_BOSS_PHASE_TURNS,
+    INVALID_BOSS_TOTAL_TURNS,
+    INVALID_FINISHING_CARD
+}
