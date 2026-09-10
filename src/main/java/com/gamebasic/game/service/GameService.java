@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class GameService {
@@ -88,12 +90,35 @@ public class GameService {
         List<Game> games =
                 gameRepository.findAllByOrderByIdDesc();
 
-        List<GameSummaryResponse> response =
-                new ArrayList<>();
+        if (games.isEmpty()){
+            return List.of();
+        }
+
+        List<Long> gameIds = new ArrayList<>();
+
+        for(Game game : games){
+            gameIds.add(game.getId());
+        }
+
+        List<DeckSizeResponse> deckSizes =
+                runCardRepository.findDeckSizesByGameIds(gameIds);
+
+        Map<Long, Long> deckSizeByGameId = new HashMap<>();
+
+        for (DeckSizeResponse deckSize : deckSizes){
+            deckSizeByGameId.put(
+                    deckSize.getGameId(),
+                    deckSize.getDeckSize()
+            );
+        }
+
+        List<GameSummaryResponse> response = new ArrayList<>();
 
         for (Game game : games){
-            long deckSize =
-                    runCardRepository.countByGame(game);
+            long deckSize = deckSizeByGameId.getOrDefault(
+                    game.getId(),
+                    0L
+            );
 
             response.add(new GameSummaryResponse(
                     game.getId(),

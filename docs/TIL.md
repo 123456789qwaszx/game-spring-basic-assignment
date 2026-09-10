@@ -968,6 +968,47 @@ public class Game extends BaseEntity {...}
 - save()를 다시 호출하지 않아도 더티 체킹으로 UPDATE가 실행되고,
 - Auditing이 updatedAt도 바꿈.
 
+[0-2] JPA 프로젝션
+- 테이블에서 필요한 열만 선택하는 연산.
+  >select * from run_cards     / 프로젝션 없음: 전부  
+  select game_id, count(id) .../ 프로젝션: 두 개만
+
+- JPA에서의 "프로젝션"은 엔티티 전체가 아닌 필요한 값만 조회하는 것을 의미.
+
+장점:
+- 전송량이 줄어듬(엔티티로 가져오면 가져온 객체 모두 메모리에 올라옴)
+- 영속성 컨텍스트에 올라오지 않음(엔티티 조회는 1차 캐시에 저장 및 스냅샷을 뜨기에 더티 체킹 대상이 됨)
+- 가독성 및 설계 의도 명시(반환 타입이 GameCardCount)
+
+사용 방법(3가지)
+0-2-1) 인터페이스 기반
+public interface GameCardCount {
+    Long getGameId();
+    Long getCardCount();
+}
+- JPQL의 별칭(as gameId)와 Getter 이름이 매칭됨. 간단함.
+
+0-2-2) 클래스 기반(생성자 표현식)
+@Query("""
+        SELECT new com.gamebasic.game.dto.DeckSizeResponse(
+        card.game.id,
+        COUNT(card)
+        )
+        FROM RunCard card
+        WHERE card.game.id IN :gameIds
+        GROUP BY card.game.id
+        """
+)
+List<DeckSizeResponse> findDeckSizesByGameIds(
+        @Param("gameIds") List<Long> gameIds
+);
+- 생성자 시그니처가 정확히 맞아야함.
+- 컴파일러가 문자열을 검사하지 않기에 오타 조심(패키지 경로 등)
+
+0-2-3) 동적 프로젝션
+<T> List<T> findByGameId(Long gameId, Class<T> type);
+- 호출 시점에 타입을 정함. 같은 쿼리를 화면마다 다른 모양으로 쓸 수 있음.
+
 [1] 카드 수 집계와 저장 시간 API 구현을 위한 명세 확인
 1) N+1 없을 것
 - 현재 'GET /games'는 '게임 목록'을 조회함. 
@@ -1115,7 +1156,7 @@ GET localhost:8080/games/4
 }
 ```
 
-[5] 카드 수 집계 1+N 버전부터 작성
+[5] 카드 수 집계 N+1 버전부터 작성
 
 - 목록 API 
 요청:
@@ -1128,6 +1169,20 @@ Hibernate: select count(rc1_0.id) from run_cards rc1_0 where rc1_0.game_id=?
 Hibernate: select count(rc1_0.id) from run_cards rc1_0 where rc1_0.game_id=?
 
 - 게임 목록 조회 1회, 카드 수 조회 3회 / 총합 4회 확인.
+
+[6] GROUP BY와 DTO 프로젝션으로 카드 수 일괄 집계
+
+- 목록 API
+요청:
+GET http://localhost:8080/games
+
+서버:
+Hibernate: select g1_0.id,g1_0.created_at,g1_0.current_floor,g1_0.current_hp,g1_0.phase,g1_0.player_name,g1_0.status,g1_0.updated_at from games g1_0 order by g1_0.id desc
+Hibernate: select rc1_0.game_id,count(rc1_0.id) from run_cards rc1_0 where rc1_0.game_id in (?,?,?) group by rc1_0.game_id
+
+- GROUP BY 집계 총합 2회 확인.
+
+-  저장된 게임 회차의 수와 상관없이, SQL의 로그 수가 일정할 것으로 기대.
 
 
 ===
