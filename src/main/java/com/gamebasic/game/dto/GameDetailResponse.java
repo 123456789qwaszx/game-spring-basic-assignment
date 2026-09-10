@@ -5,6 +5,7 @@ import com.gamebasic.game.entity.GameStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 // 저장된 게임 상태 반환
@@ -18,5 +19,9 @@ public class GameDetailResponse {
     private int currentFloor;
     private GamePhase phase;
     private GameStatus status;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     private List<CardResponse> deck;
 }

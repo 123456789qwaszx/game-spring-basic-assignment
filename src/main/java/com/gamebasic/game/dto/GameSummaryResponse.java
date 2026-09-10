@@ -5,6 +5,8 @@ import com.gamebasic.game.entity.GameStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 public class GameSummaryResponse {
@@ -15,4 +17,7 @@ public class GameSummaryResponse {
     private int currentFloor;
     private GamePhase phase;
     private GameStatus status;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

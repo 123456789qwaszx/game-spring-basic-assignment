@@ -98,7 +98,9 @@ public class GameService {
                     game.getCurrentHp(),
                     game.getCurrentFloor(),
                     game.getPhase(),
-                    game.getStatus()
+                    game.getStatus(),
+                    game.getCreatedAt(),
+                    game.getUpdatedAt()
             ));
         }
 
@@ -159,6 +161,8 @@ public class GameService {
                 game.getCurrentFloor(),
                 game.getPhase(),
                 game.getStatus(),
+                game.getCreatedAt(),
+                game.getUpdatedAt(),
                 deck
         );
     }

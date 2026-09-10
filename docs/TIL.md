@@ -998,6 +998,124 @@ ___Result___
 1	1	99	REWARD	가나	PLAYING		
 ___
 
+[4] responseDTO에 저장 및 업데이트 시간 추가
+
+1) 목록 응답에 createdAt, updatedAt 반영 확인
+
+요청
+```http
+localhost:8080/games
+```
+
+응답 '200 OK'
+```json
+[
+    {
+        "id": 4,
+        "playerName": "밤의 후계자",
+        "currentHp": 99,
+        "currentFloor": 1,
+        "phase": "BATTLE",
+        "status": "PLAYING",
+        "createdAt": "2026-09-10T10:16:07.807114",
+        "updatedAt": "2026-09-10T10:16:16.298867"
+    },
+    {
+        "id": 3,
+        "playerName": "M6 이름변경 테스트",
+        "currentHp": 50,
+        "currentFloor": 3,
+        "phase": "BATTLE",
+        "status": "FAILED",
+        "createdAt": null,
+        "updatedAt": null
+    },
+    {
+        "id": 1,
+        "playerName": "가나",
+        "currentHp": 99,
+        "currentFloor": 1,
+        "phase": "REWARD",
+        "status": "PLAYING",
+        "createdAt": null,
+        "updatedAt": null
+    }
+]
+```
+
+2) 상세 목록 응답에 createdAt, updatedAt 반영 확인
+요청
+```http
+GET localhost:8080/games/4
+```
+
+응답 '200 OK'
+```json
+{
+    "id": 4,
+    "playerName": "밤의 후계자",
+    "currentHp": 99,
+    "currentFloor": 1,
+    "phase": "BATTLE",
+    "status": "PLAYING",
+    "createdAt": "2026-09-10T10:16:07.807114",
+    "updatedAt": "2026-09-10T10:16:16.298867",
+    "deck": [
+        {
+            "id": 25,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 26,
+            "cardType": "STRIKE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 27,
+            "cardType": "HEART_PIERCE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 28,
+            "cardType": "GUARD",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 29,
+            "cardType": "MIST_KNOT",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 30,
+            "cardType": "QUICK_SLASH",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 31,
+            "cardType": "WARDING_SLASH",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 32,
+            "cardType": "BLOOD_RUNE",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 33,
+            "cardType": "MEND",
+            "acquiredFloor": 0
+        },
+        {
+            "id": 34,
+            "cardType": "NIGHT_DANCE",
+            "acquiredFloor": 0
+        }
+    ]
+}
+```
+
+
 ===
 
 
