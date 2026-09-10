@@ -104,7 +104,7 @@
 -> 미충족 기록은 순위와 excludedCount 모두에서 제외.
 
 [2] 클리어 시간
-1) 44. run.durationSeconds >= 43. run.clearedFloor x 30
+1) 44. run.durationSeconds >= 43. run.clearedFloor * 30
 
 -> 순위 대상은 10층이므로 300초 이상.
 
