@@ -4,22 +4,24 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.gamebasic.ranking.core.RankingRecordFixture.validCandidate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class RankingGateTest {
+@DisplayName("RankingGate")
+class RankingGateTest {
 
     private RankingGate gate;
 
     @BeforeEach
-    void setUP(){
+    void setUp() {
         gate = new RankingGate();
     }
 
     @Test
     @DisplayName("CLEARED 상태로 10층을 클리어한 기록은 참가 대상이다")
-    void clearedFinalFloorIsEligible(){
+    void clearedFinalFloorIsEligible() {
         RankingRecord record =
-                new RankingRecord("CLEARED", 10, 300, 99);
+                validCandidate().build();
 
         GateDecision actual =
                 gate.evaluate(record);
@@ -32,9 +34,11 @@ public class RankingGateTest {
 
     @Test
     @DisplayName("FAILED 상태인 기록은 10층이어도 참가 대상이 아니다")
-    void failedRecordIsNotEligible(){
+    void failedRecordIsNotEligible() {
         RankingRecord record =
-                new RankingRecord("FAILED", 10, 300, 99);
+                validCandidate()
+                        .status("FAILED")
+                        .build();
 
         GateDecision actual =
                 gate.evaluate(record);
@@ -47,9 +51,11 @@ public class RankingGateTest {
 
     @Test
     @DisplayName("10층에 도달하지 않은 기록은 CLEARED 상태여도 참가 대상이 아니다")
-    void nonFinalFloorIsNotEligible(){
+    void nonFinalFloorIsNotEligible() {
         RankingRecord record =
-                new RankingRecord("CLEARED", 9, 300, 99);
+                validCandidate()
+                        .clearedFloor(9)
+                        .build();
 
         GateDecision actual =
                 gate.evaluate(record);
