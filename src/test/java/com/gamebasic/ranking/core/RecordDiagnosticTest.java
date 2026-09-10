@@ -20,7 +20,8 @@ class RecordDiagnosticTest {
                                 new ClearTimeInvariant(),
                                 new FinalHpInvariant(),
                                 new DeckSizeInvariant(),
-                                new CardTypeInvariant(ALLOWED_CARD_TYPES)
+                                new CardTypeInvariant(ALLOWED_CARD_TYPES),
+                                new AcquiredFloorInvariant()
                         )
                 );
 

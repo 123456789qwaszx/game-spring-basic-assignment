@@ -6,4 +6,5 @@ public enum RecordVerdict {
     INVALID_HP,
     INVALID_DECK_SIZE,
     INVALID_CARD_TYPE,
+    INVALID_ACQUIRED_FLOOR
 }
