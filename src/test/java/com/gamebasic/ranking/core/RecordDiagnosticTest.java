@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static com.gamebasic.ranking.core.RankingRecordFixture.ALLOWED_CARD_TYPES;
 import static com.gamebasic.ranking.core.RankingRecordFixture.validCandidate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -18,7 +19,8 @@ class RecordDiagnosticTest {
                         List.of(
                                 new ClearTimeInvariant(),
                                 new FinalHpInvariant(),
-                                new DeckSizeInvariant()
+                                new DeckSizeInvariant(),
+                                new CardTypeInvariant(ALLOWED_CARD_TYPES)
                         )
                 );
 

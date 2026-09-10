@@ -1,6 +1,10 @@
 package com.gamebasic.ranking.core;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 final class RankingRecordFixture {
@@ -26,6 +30,11 @@ final class RankingRecordFixture {
                             card("MEND", 0)
                     )
             );
+
+    static final Set<String> ALLOWED_CARD_TYPES =
+            Arrays.stream(CardType.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toUnmodifiableSet());
 
     private RankingRecordFixture() {
     }
@@ -58,6 +67,20 @@ final class RankingRecordFixture {
         return new RankingRecord.Deck.Card(
                 cardType,
                 acquiredFloor
+        );
+    }
+
+    static RankingRecord.Deck deckContaining(
+            RankingRecord.Deck.Card changedCard
+    ) {
+        List<RankingRecord.Deck.Card> cards =
+                new ArrayList<>(VALID_DECK.cards());
+
+        cards.set(0, changedCard);
+
+        return new RankingRecord.Deck(
+                cards.size(),
+                cards
         );
     }
 
