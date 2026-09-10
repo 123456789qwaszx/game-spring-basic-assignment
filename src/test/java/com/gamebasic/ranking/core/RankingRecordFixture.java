@@ -139,6 +139,32 @@ final class RankingRecordFixture {
         );
     }
 
+    static RankingRecord.BossFight bossFightWithTurns(
+            int throneTurns,
+            int unboundTurns,
+            int eclipseTurns
+    ) {
+        return bossFightWithPhases(
+                List.of(
+                        phase(
+                                "THRONE",
+                                throneTurns,
+                                VALID_DAMAGE_TAKEN
+                        ),
+                        phase(
+                                "UNBOUND",
+                                unboundTurns,
+                                VALID_DAMAGE_TAKEN
+                        ),
+                        phase(
+                                "ECLIPSE",
+                                eclipseTurns,
+                                VALID_DAMAGE_TAKEN
+                        )
+                )
+        );
+    }
+
     static final class Builder {
 
         private String status = VALID_STATUS;
