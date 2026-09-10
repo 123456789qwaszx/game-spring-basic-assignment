@@ -920,6 +920,87 @@ Content-Type: application/json
 
 ===
 
+---- lv11 ----
+
+[0] JPA Auditing
+1) 엔티티가 언제 생성되고 수정됐는지를 JPA가 자동으로 기록해 주는 기능
+
+2) '@EnableJpaAuditing'을 앱 클래스에 붙일 경우,
+- 스프링은 엔티티가 생성, 수정 시점을 감시하고, Auditing 필드를 자동으로 관리.
+
+3) 시간 필드를 가진 부모 클래스
+@Getter
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+public abstract class BaseEntity {
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+}
+- @MappedSuperclass: 부모 클래스의 필드를 자식 엔티티의 DB 컬럼으로 포함
+- @EntityListeners(...): 엔티티 저장/수정 이벤트를 감지
+- @CreatedDate: 처음 저장될 때 생성 시각 입력
+- @LastModifiedDate: 처음 저장되거나 수정될 때 시각 입력
+- @Column(updatable = false): 생성 시각이 이후 UPDATE에서 변경되지 않게 함
+
+4) 이 BaseEntity를 Game에 상속 시키면,
+public class Game extends BaseEntity {...}
+
+- Game 클래스에 필드를 직접 선언하지 않더라도,
+- 'games'테이블에는 다음 컬럼이 생김.
+  "created_at", "updated_at"
+
+- 자바 객체에서도 다음과 같이 사용 가능
+  "game.getCreatedAt();", "game.getUpdatedAt();"
+
+5) 실제 동작
+- 새 게임을 저장하면
+  "gameRepository.save(game);"
+
+-> JPA가 INSERT 전에 시간을 넣음
+   "createdAt = 현재시간", "updatedAt = 현재시간"
+
+- 이름 변경하는 경우에도
+- save()를 다시 호출하지 않아도 더티 체킹으로 UPDATE가 실행되고,
+- Auditing이 updatedAt도 바꿈.
+
+[1] 카드 수 집계와 저장 시간 API 구현을 위한 명세 확인
+1) N+1 없을 것
+- 현재 'GET /games'는 '게임 목록'을 조회함. 
+```sql
+select * from games order by id desc;
+```
+- 여기서 각 게임의 카드 수를 집계.
+- 단순하게 방법
+-> 게임 목록 조회 1회
+-> '게임2' 카드 조회
+-> '게임2' 카드 조회
+=> 이 방법은 게임이 N개 일 때, 쿼리가 N+1로 나가는데, 명세에서 정확하게 금지함.
+
+- 더 좋은 방법
+-> 게임 전체 조회
+-> 게임 별 카드 수 GROUP BY 집계.
+
+
+[2] BaseEntity 생성 및 JPA Auditing 활성화
+
+[3] created_at, updated_at 테이블 추가 확인
+- 8080브라우저에서 새 게임 생성
+
+mysql> SELECT *FROM games ORDER BY id DESC;
+___Result___
+4	1	99	BATTLE	밤의 후계자	PLAYING	2026-09-10 10:16:07.807114	2026-09-10 10:16:16.298867
+3	3	50	BATTLE	M6 이름변경 테스트	FAILED		
+1	1	99	REWARD	가나	PLAYING		
+___
+
+===
+
+
 ## M0
 
 - 최소 GameService 및 GameController를 제외하고 삭제 완료.

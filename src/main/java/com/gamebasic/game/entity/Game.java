@@ -1,5 +1,6 @@
 package com.gamebasic.game.entity;
 
+import com.gamebasic.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "games")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Game {
+public class Game extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
