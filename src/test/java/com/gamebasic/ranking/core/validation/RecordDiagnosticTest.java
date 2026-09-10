@@ -10,6 +10,7 @@ import java.util.List;
 import static com.gamebasic.ranking.testfixture.RankingRecordFixture.ALLOWED_CARD_TYPES;
 import static com.gamebasic.ranking.testfixture.RankingRecordFixture.validCandidate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class RecordDiagnosticTest {
 
@@ -39,6 +40,33 @@ class RecordDiagnosticTest {
 
         assertEquals(
                 RecordVerdict.VALID,
+                verdict
+        );
+    }
+
+    @Test
+    @DisplayName("첫 번째 위반을 반환하고 이후 정상 조건은 검사하지 않는다")
+    void returnsFirstViolationAndStopsEvaluation() {
+        RecordDiagnostic diagnostic =
+                new RecordDiagnostic(
+                        List.of(
+                                record -> RecordVerdict.VALID,
+                                record -> RecordVerdict.INVALID_HP,
+                                record -> {
+                                    fail("첫 번째 위반 이후의 정상 조건이 실행되었습니다.");
+                                    return RecordVerdict.VALID;
+                                }
+                        )
+                );
+
+        RankingRecord record =
+                validCandidate().build();
+
+        RecordVerdict verdict =
+                diagnostic.diagnose(record);
+
+        assertEquals(
+                RecordVerdict.INVALID_HP,
                 verdict
         );
     }
