@@ -135,7 +135,7 @@
 [8] 보스 페이즈별 턴 수
 1) 73. 모든 bossFight.phases[].turns >= 1
 
-[9] 보스 총 턴 수
+[9] 보스 총 턴 수 일관성
 1) 75. bossFight.totalTurns == 73. bossFight.phases[].turns의 합계
 
 [10] 마무리 카드

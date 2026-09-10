@@ -23,7 +23,8 @@ class RecordDiagnosticTest {
                                 new CardTypeInvariant(ALLOWED_CARD_TYPES),
                                 new AcquiredFloorInvariant(),
                                 new BossPhaseInvariant(),
-                                new BossPhaseTurnsInvariant()
+                                new BossPhaseTurnsInvariant(),
+                                new BossTotalTurnsInvariant()
                         )
                 );
 
