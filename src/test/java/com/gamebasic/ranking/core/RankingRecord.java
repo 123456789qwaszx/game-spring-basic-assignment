@@ -28,7 +28,7 @@ public record RankingRecord(
 
     public record BossFight(
             List<Phase> phases,
-            String finishedCard,
+            String finishingCard,
             Integer totalTurns
     ) {
         public BossFight {

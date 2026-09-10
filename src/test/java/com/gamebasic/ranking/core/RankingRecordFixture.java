@@ -194,6 +194,16 @@ final class RankingRecordFixture {
         );
     }
 
+    static RankingRecord.BossFight bossFightWithFinishingCard(
+            String finishingCard
+    ) {
+        return new RankingRecord.BossFight(
+                VALID_BOSS_FIGHT.phases(),
+                finishingCard,
+                VALID_BOSS_FIGHT.totalTurns()
+        );
+    }
+
     static final class Builder {
 
         private String status = VALID_STATUS;

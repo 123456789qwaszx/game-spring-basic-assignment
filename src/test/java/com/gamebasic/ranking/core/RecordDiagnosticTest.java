@@ -24,7 +24,8 @@ class RecordDiagnosticTest {
                                 new AcquiredFloorInvariant(),
                                 new BossPhaseInvariant(),
                                 new BossPhaseTurnsInvariant(),
-                                new BossTotalTurnsInvariant()
+                                new BossTotalTurnsInvariant(),
+                                new FinishingCardInvariant()
                         )
                 );
 
