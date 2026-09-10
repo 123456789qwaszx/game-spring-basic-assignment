@@ -17,7 +17,8 @@ class RecordDiagnosticTest {
                 new RecordDiagnostic(
                         List.of(
                                 new ClearTimeInvariant(),
-                                new FinalHpInvariant()
+                                new FinalHpInvariant(),
+                                new DeckSizeInvariant()
                         )
                 );
 
