@@ -1,7 +1,7 @@
 package com.gamebasic.ranking.core.validation;
 
 import com.gamebasic.ranking.core.model.RankingRecord;
-import com.gamebasic.ranking.RecordInvariant;
+import com.gamebasic.ranking.core.validation.invariant.RecordInvariant;
 
 import java.util.List;
 
