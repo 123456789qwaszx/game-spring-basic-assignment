@@ -58,7 +58,7 @@ RankingSource
         ↓  
 RankingSourceMapper.mapRecords()  
         ↓  
-List<RankingRecord>  
+List"RankingRecord"  
         ↓  
 RankingPolicy.screen()  
     ├─ Gate  

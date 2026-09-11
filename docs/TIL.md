@@ -1416,7 +1416,7 @@ public class GameController {
 
 [5] GameRepository를 사용 가능한 이유
 - 인터페이스 본문이 비어있음에도, JpaRepository로부터 이미 메서드를 상속 받음.
-- <S extends Game> S save(S entity);
+- <extends Game> S save(S entity);
 Optional<Game> findById(Lond id);
 List<Game> findAll();
 void delete(Game entity);
